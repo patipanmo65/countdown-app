@@ -1,19 +1,20 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Play, RotateCcw, Pencil, Maximize } from "lucide-react";
+import { Play, RotateCcw, Pencil, Maximize, Pause } from "lucide-react";
 
 export default function CountdownPage() {
   const [hours, setHours] = useState(1);
   const [minutes, setMinutes] = useState(14);
   const [seconds, setSeconds] = useState(0);
 
-  const [timeLeft, setTimeLeft] = useState(
-    hours * 3600 + minutes * 60 + seconds,
-  );
+  // ค่าเวลาเริ่มต้น
+  const initialTime = hours * 3600 + minutes * 60 + seconds;
 
+  const [timeLeft, setTimeLeft] = useState(initialTime);
   const [running, setRunning] = useState(false);
 
+  // Countdown
   useEffect(() => {
     let timer: NodeJS.Timeout;
 
@@ -23,33 +24,53 @@ export default function CountdownPage() {
       }, 1000);
     }
 
-    if (timeLeft === 0) {
+    // หมดเวลา
+    if (timeLeft <= 0 && running) {
       setRunning(false);
-      alert("หมดเวลาแล้วจ้าาาา");
+      setTimeLeft(0);
+      alert("หมดเวลาแล้วจ้า");
     }
 
     return () => clearInterval(timer);
   }, [running, timeLeft]);
 
-  const format = (num: number) => String(num).padStart(2, "0");
+  // Format Time
+  const format = (num: number) => {
+    return String(num).padStart(2, "0");
+  };
 
+  // Display Time
   const displayHours = Math.floor(timeLeft / 3600);
   const displayMinutes = Math.floor((timeLeft % 3600) / 60);
   const displaySeconds = timeLeft % 60;
 
+  // Start / Resume
   const startTimer = () => {
-    setTimeLeft(hours * 3600 + minutes * 60 + seconds);
+    // ถ้ายังไม่มีเวลา ให้ใช้ค่าจาก input
+    if (timeLeft <= 0) {
+      setTimeLeft(initialTime);
+    }
+
     setRunning(true);
   };
 
-  const cancelTimer = () => {
+  // Pause
+  const stopTimer = () => {
     setRunning(false);
   };
 
+  // Reset
+  const cancelTimer = () => {
+    setRunning(false);
+    setTimeLeft(initialTime);
+  };
+
+  // Add 1 Minute
   const addMinute = () => {
     setTimeLeft((prev) => prev + 60);
   };
 
+  // Fullscreen
   const fullscreen = () => {
     if (document.documentElement.requestFullscreen) {
       document.documentElement.requestFullscreen();
@@ -64,7 +85,7 @@ export default function CountdownPage() {
       <div className="w-full max-w-6xl border-t-4 border-gray-300 pt-10">
         {/* Timer Box */}
         <div className="bg-[#dcdcdc] rounded-3xl p-10 flex items-center justify-center gap-10">
-          {/* Hour */}
+          {/* Hours */}
           <div className="flex flex-col items-center">
             <div className="bg-[#1d1d1d] text-white px-5 py-3 rounded-md relative mb-4 text-2xl font-bold">
               ชม.
@@ -73,6 +94,7 @@ export default function CountdownPage() {
 
             <input
               type="number"
+              min={0}
               value={hours}
               onChange={(e) => setHours(Number(e.target.value))}
               className="w-[220px] h-[180px] text-center text-[110px] bg-white border border-gray-400 rounded-sm outline-none"
@@ -82,7 +104,7 @@ export default function CountdownPage() {
           {/* Colon */}
           <div className="text-[100px] font-light text-gray-500 mt-20">:</div>
 
-          {/* Minute */}
+          {/* Minutes */}
           <div className="flex flex-col items-center">
             <div className="bg-[#1d1d1d] text-white px-5 py-3 rounded-md relative mb-4 text-2xl font-bold">
               น.
@@ -91,8 +113,10 @@ export default function CountdownPage() {
 
             <input
               type="number"
+              min={0}
+              max={59}
               value={minutes}
-              onChange={(e) => setMinutes(Number(e.target.value))}
+              onChange={(e) => setMinutes(Math.min(59, Number(e.target.value)))}
               className="w-[220px] h-[180px] text-center text-[110px] bg-white border border-gray-400 rounded-sm outline-none"
             />
           </div>
@@ -100,7 +124,7 @@ export default function CountdownPage() {
           {/* Colon */}
           <div className="text-[100px] font-light text-gray-500 mt-20">:</div>
 
-          {/* Second */}
+          {/* Seconds */}
           <div className="flex flex-col items-center">
             <div className="bg-[#1d1d1d] text-white px-5 py-3 rounded-md relative mb-4 text-2xl font-bold">
               ว.
@@ -109,52 +133,44 @@ export default function CountdownPage() {
 
             <input
               type="number"
+              min={0}
+              max={59}
               value={seconds}
-              onChange={(e) => setSeconds(Number(e.target.value))}
+              onChange={(e) => setSeconds(Math.min(59, Number(e.target.value)))}
               className="w-[220px] h-[180px] text-center text-[110px] bg-white border border-gray-400 rounded-sm outline-none"
             />
           </div>
         </div>
 
-        {/* Running Display */}
-        {running && (
-          <div className="text-center text-8xl font-bold mt-10 text-[#111]">
-            {format(displayHours)}:{format(displayMinutes)}:
-            {format(displaySeconds)}
-          </div>
-        )}
+        {/* Time Display */}
+        <div className="text-center text-8xl font-bold mt-10 text-[#111]">
+          {format(displayHours)}:{format(displayMinutes)}:
+          {format(displaySeconds)}
+        </div>
+
         {/* Buttons */}
         <div className="flex justify-center gap-4 mt-10">
           {/* Start */}
           <button
-            onClick={() => {
-              if (!running) {
-                if (timeLeft <= 0) {
-                  setTimeLeft(hours * 3600 + minutes * 60 + seconds);
-                }
-                setRunning(true);
-              }
-            }}
+            onClick={startTimer}
             className="w-[250px] h-[90px] bg-[#1d6df2] hover:bg-[#1358ca] text-white rounded-xl text-4xl font-bold flex items-center justify-center gap-4"
           >
             <Play size={38} />
             เริ่มต้น
           </button>
 
-          {/* Stop */}
+          {/* Pause */}
           <button
-            onClick={() => setRunning(false)}
+            onClick={stopTimer}
             className="w-[250px] h-[90px] bg-[#f0ad4e] hover:bg-[#d99637] text-white rounded-xl text-4xl font-bold flex items-center justify-center gap-4"
           >
-            ⏸ หยุด
+            <Pause size={38} />
+            หยุด
           </button>
 
-          {/* Cancel */}
+          {/* Reset */}
           <button
-            onClick={() => {
-              setRunning(false);
-              setTimeLeft(hours * 3600 + minutes * 60 + seconds);
-            }}
+            onClick={cancelTimer}
             className="w-[250px] h-[90px] bg-[#dc3545] hover:bg-[#bb2d3b] text-white rounded-xl text-4xl font-bold flex items-center justify-center gap-4"
           >
             <RotateCcw size={38} />
@@ -164,6 +180,7 @@ export default function CountdownPage() {
 
         {/* Bottom Buttons */}
         <div className="flex justify-center gap-4 mt-16">
+          {/* Fullscreen */}
           <button
             onClick={fullscreen}
             className="border border-gray-400 bg-white px-8 py-4 rounded-lg text-2xl text-gray-600 flex items-center gap-3 hover:bg-gray-100"
@@ -172,11 +189,13 @@ export default function CountdownPage() {
             เต็มจอ
           </button>
 
+          {/* Edit */}
           <button className="border border-gray-400 bg-white px-8 py-4 rounded-lg text-2xl text-gray-600 flex items-center gap-3 hover:bg-gray-100">
             <Pencil size={24} />
             แก้ไขชื่อ
           </button>
 
+          {/* +1 Minute */}
           <button
             onClick={addMinute}
             className="border border-gray-400 bg-white px-8 py-4 rounded-lg text-2xl text-gray-600 hover:bg-gray-100"
