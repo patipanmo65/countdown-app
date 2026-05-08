@@ -25,7 +25,7 @@ export default function CountdownPage() {
 
     if (timeLeft === 0) {
       setRunning(false);
-      alert("หมดเวลา");
+      alert("หมดเวลาแล้วจ้าาาา");
     }
 
     return () => clearInterval(timer);
